@@ -571,7 +571,7 @@ def group_analysis_country_app(stocks_df: pd.DataFrame):
 
 def whole_st_app():
     """Gather the whole app together."""
-    path = '2021-09-11T11:49:29.csv'
+    path = './db/main.csv'
     raw_df = read_data(path)
     clean_df = clean_data(raw_df)
     stocks_df = stocks_data(clean_df)
