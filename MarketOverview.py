@@ -70,8 +70,6 @@ def etf_data(data: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-
-
 def general_app(df: pd.DataFrame):
     st.header('General')
     st.subheader('Main DataFrame')
@@ -233,6 +231,233 @@ def top_movers_etf_app(etf_df: pd.DataFrame):
         )
     )
 
+def group_analysis_sector_app(stocks_df: pd.DataFrame):
+    st.header("Group Analysis: Sector")
+    sector_group = stocks_df.groupby('sector')
+
+    sectors = sorted(stocks_df['sector'].unique())
+    colors = [
+        'grey', 'red', 'green',
+        'orange', 'olive', 'gold',
+        'orchid', 'steelblue', 'mediumpurple',
+        'teal', 'pink',
+    ]
+    with st.expander('Number of Companies'):
+        st.subheader('Number of Companies')
+        chart_number_of_companies = st.radio(
+            'Choose your chart: Number of Companies',
+            ['matplotlib chart', 'streamlit chart']
+        )
+        if chart_number_of_companies == 'streamlit chart':
+            st.bar_chart(sector_group.ticker.count(), use_container_width=False)
+            st.dataframe(sector_group.ticker.count())
+        elif chart_number_of_companies == 'matplotlib chart':
+            fig, ax = plt.subplots(figsize=(3, 3))
+            plt.bar(
+                np.arange(len(sector_group.ticker.count())),
+                sector_group.ticker.count(),
+                color=colors
+            )
+            plt.xticks(np.arange(len(sector_group.ticker.count())), sectors, rotation=90)
+            plt.title("Sector comparison by:  Sector's total # of companies")
+            st.pyplot(fig)
+
+    with st.expander('Volume'):
+        st.subheader('Volume')
+        chart_volume = st.radio(
+            'Choose your chart: Volume',
+            ['matplotlib chart', 'streamlit chart']
+        )
+        if chart_volume == 'streamlit chart':
+            st.bar_chart(sector_group.volume.sum(), use_container_width=False)
+            st.dataframe(sector_group.volume.sum())
+        elif chart_volume == 'matplotlib chart':
+            fig, ax = plt.subplots(figsize=(3, 3))
+            plt.bar(
+                np.arange(len(sector_group.volume.sum())),
+                sector_group.volume.sum(),
+                color=colors
+            )
+            plt.xticks(np.arange(len(sector_group.volume.sum())), sectors, rotation=90)
+            plt.title("Sector comparison by:  Sector's total volume traded")
+            st.pyplot(fig)
+
+    with st.expander('Market Cap'):
+        st.subheader('Market Cap')
+        chart_market_cap = st.radio(
+            'Choose your chart: Market Cap',
+            ['matplotlib chart', 'streamlit chart']
+        )
+        if chart_market_cap == 'streamlit chart':
+            st.bar_chart(sector_group.market_cap.sum(), use_container_width=False)
+            st.dataframe(sector_group.market_cap.sum())
+        elif chart_market_cap == 'matplotlib chart':
+            fig, ax = plt.subplots(figsize=(3, 3))
+            plt.bar(
+                np.arange(len(sector_group.market_cap.sum())),
+                sector_group.market_cap.sum(),
+                color=colors
+            )
+            plt.xticks(np.arange(len(sector_group.market_cap.sum())), sectors, rotation=90)
+            plt.title("Sector comparison by:  Sector's total Market Cap")
+            st.pyplot(fig)
+
+    with st.expander('-- Conclusion --'):
+        st.markdown(
+            """
+            Major things to consider from these plots are:
+            - ***Basic Materials:***
+            Number of companies and market cap are low BUT the volume traded is high.
+
+            - ***Financial:***
+            Number of companies is really high and the market cap is considerable
+            BUT volume traded is low.
+
+            - ***Healthcare:***
+            Most traded sector based on volume with large number of companies
+            BUT the market cap is not high enough.
+
+            - ***Technology:***
+            It has the largest market cap with average number of companies AND good volume trading.
+
+            - ***Communication Services / Consumer Cyclical:***
+            Even though the number of companies is low BUT the market cap is high.
+
+            - ***Consumer Defensive / Energy / Industrials / Real Estate / Utilities:***
+            These are most likely the same in all three plots.
+            """
+        )
+
+def group_analysis_industry_app(stocks_df: pd.DataFrame):
+    st.header("Group Analysis: Industry")
+    sector_group = stocks_df.groupby('sector')
+    industry_group = stocks_df.groupby(['sector', 'industry'])
+
+    with st.expander('Sector / Industry charts'):
+        pie_chart_type = st.radio(
+            "Chart based on",
+            ['Number of companies', 'Volume', 'Market Cap']
+        )
+        colors = [
+            'grey', 'red', 'green',
+            'orange', 'olive', 'gold',
+            'orchid', 'steelblue', 'mediumpurple',
+            'teal', 'pink',
+        ]
+        if pie_chart_type == 'Number of companies':
+            fig, ax = plt.subplots()
+            plt.pie(
+                sector_group.ticker.count(),
+                labels=sector_group.ticker.count().index,
+                colors=colors,
+                wedgeprops=dict(width=0.3, edgecolor='w'),
+                radius=1.1,
+                autopct='%1.1f%%',
+                pctdistance=0.9,
+                rotatelabels=True,
+            )
+            plt.pie(industry_group.ticker.count(), radius=0.8)
+            plt.title("Industry comparison grouped by Sectors: total # of companies", y=1.3)
+            st.pyplot(fig)
+            st.markdown(
+                """
+                - Industries with considerable number of companies:
+                    - Couple of industries in Financial sector
+                    - One industry in Technology sector
+                    - One industry in Healthcare sector
+                """
+            )
+        elif pie_chart_type == 'Volume':
+            fig, ax = plt.subplots()
+            plt.pie(
+                sector_group.volume.sum(),
+                labels=sector_group.volume.sum().index,
+                colors=colors,
+                wedgeprops=dict(width=0.3, edgecolor='w'),
+                radius=1.1,
+                autopct='%1.1f%%',
+                pctdistance=0.9,
+                rotatelabels=True
+            )
+            plt.pie(industry_group.volume.sum(), radius=0.8)
+            plt.title("Industry comparison grouped by Sectors: total volume traded", y=1.3)
+            st.pyplot(fig)
+            st.markdown(
+                """
+                - Industries with considerable volume traded:
+                    - Two major industries in Healthcare sector
+                    - Two major industries in Consumer Cyclical sector
+                    - One industry in Technology sector
+                    - One industry in Basic Materails sector
+                    - Three major industries in Communication Services sector
+                    - One industry in Industrials sector
+                """
+            )
+        elif pie_chart_type == 'Market Cap':
+            fig, ax = plt.subplots()
+            plt.pie(
+                sector_group.market_cap.sum(),
+                labels=sector_group.market_cap.sum().index,
+                colors=colors,
+                wedgeprops=dict(width=0.3, edgecolor='w'),
+                radius=1.1,
+                autopct='%1.1f%%',
+                pctdistance=0.9,
+                rotatelabels=True
+            )
+            plt.pie(industry_group.market_cap.sum(), radius=0.8)
+            plt.title("Industry comparison grouped by Sectors: total Market Cap", y=1.3)
+            st.pyplot(fig)
+            st.markdown(
+                """
+                - Industries with considerable market cap:
+                    - Couple of industries in Technology sector
+                    - One industry in Communication Services sector
+                    - One industry in Consumer Cyclical sector
+                    - One industry in Healthcare sector
+                """
+            )
+
+    st.markdown("### Let's look at the industries in each sector for more intuition.")
+
+    sectors = sorted(stocks_df['sector'].unique())
+    sector_choice = st.selectbox('Choose the Sector', sectors)
+    col1, col2 = st.columns(2)
+    with col1:
+        industry_criterion = st.radio(
+                'Choose your criterion:',
+                ['Number of Companies', 'Volume', 'Market Cap']
+            )
+    with col2:
+        chart_industry = st.radio(
+                'Choose your chart:',
+                ['matplotlib chart', 'streamlit chart']
+            )
+
+    if industry_criterion == 'Number of Companies':
+        plot_data = sector_group.get_group(sector_choice).groupby('industry').ticker.count()
+    elif industry_criterion == 'Volume':
+        plot_data = sector_group.get_group(sector_choice).groupby('industry').volume.sum()
+    elif industry_criterion == 'Market Cap':
+        plot_data = sector_group.get_group(sector_choice).groupby('industry').market_cap.sum()
+
+    if chart_industry == 'streamlit chart':
+        st.bar_chart(plot_data, use_container_width=False)
+        st.dataframe(plot_data)
+    elif chart_industry == 'matplotlib chart':
+        fig, ax = plt.subplots(figsize=(3, 3))
+        plt.title(f'Industry comparison in sector " {sector_choice} ": total {industry_criterion}')
+        plt.bar(
+            np.arange(len(plot_data)),
+            plot_data,
+            color=sns.color_palette('muted', n_colors=25)
+        )
+        plt.xticks(
+            np.arange(len(plot_data)),
+            plot_data.index,
+            rotation=90
+        )
+        st.pyplot(fig)
 
 
 
@@ -278,8 +503,10 @@ def whole_st_app():
         top_movers_stocks_app(stocks_df)
     elif menu_choice == 'Top Movers: ETFs':
         top_movers_etf_app(etf_df)
-
-
+    elif menu_choice == 'Group Analysis: Sector':
+        group_analysis_sector_app(stocks_df)
+    elif menu_choice == 'Group Analysis: Industry':
+        group_analysis_industry_app(stocks_df)
 
 if __name__ == '__main__':
     whole_st_app()
