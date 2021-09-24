@@ -615,6 +615,8 @@ def whole_st_app():
         group_analysis_sector_app(stocks_df)
     elif menu_choice == 'Group Analysis: Industry':
         group_analysis_industry_app(stocks_df)
+    elif menu_choice == 'Group Analysis: Country':
+        group_analysis_country_app(stocks_df)
 
 if __name__ == '__main__':
     whole_st_app()
