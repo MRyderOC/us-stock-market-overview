@@ -308,7 +308,7 @@ def top_movers_stocks_app(stocks_df: pd.DataFrame):
         df.loc[volume_outliers].sort_values(
             by=['volume'],
             ascending=False
-        )
+        ).reset_index().drop(['index', 'level_0'], axis=1)
     )
 
     st.subheader("Most percentage change")
@@ -319,12 +319,17 @@ def top_movers_stocks_app(stocks_df: pd.DataFrame):
             by=['change'],
             key=lambda col: abs(col),
             ascending=False
-        )
+        ).reset_index().drop(['index', 'level_0'], axis=1)
     )
 
     st.subheader("Most traded and most changed")
     both_outliers = sorted(list(set(volume_outliers).intersection(change_outliers)))
-    st.dataframe(df.loc[both_outliers].sort_values(by=['change'], ascending=False))
+    st.dataframe(
+        df.loc[both_outliers].sort_values(
+            by=['change'],
+            ascending=False
+        ).reset_index().drop(['index', 'level_0'], axis=1)
+    )
 
 def top_movers_etf_app(etf_df: pd.DataFrame):
     st.header("Top movers")
@@ -337,7 +342,7 @@ def top_movers_etf_app(etf_df: pd.DataFrame):
         etf_df.loc[etf_df.index.intersection(volume_outliers)].sort_values(
             by=['volume'],
             ascending=False
-        )
+        ).reset_index().drop(['index'], axis=1)
     )
 
     st.subheader("Most percentage change")
@@ -348,7 +353,7 @@ def top_movers_etf_app(etf_df: pd.DataFrame):
             by=['change'],
             key=lambda col: abs(col),
             ascending=False
-        )
+        ).reset_index().drop(['index'], axis=1)
     )
 
     st.subheader("Most traded and most changed")
@@ -357,7 +362,7 @@ def top_movers_etf_app(etf_df: pd.DataFrame):
         etf_df.loc[etf_df.index.intersection(both_outliers)].sort_values(
             by=['change'],
             ascending=False
-        )
+        ).reset_index().drop(['index'], axis=1)
     )
 
 def group_analysis_sector_app(stocks_df: pd.DataFrame):
@@ -704,7 +709,7 @@ def correlation_app(stocks_df: pd.DataFrame):
 
 def whole_st_app():
     """Gather the whole app together."""
-    path = './db/main.csv'
+    path = './db/2021-09-24_raw.csv'
     raw_df = read_data(path)
     clean_df = clean_data(raw_df)
     stocks_df = stocks_data(clean_df)
