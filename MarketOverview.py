@@ -1,5 +1,6 @@
 from itertools import combinations
 import json
+import time
 
 import numpy as np
 import pandas as pd
@@ -121,8 +122,6 @@ def read_historical(ticker_list: list) -> dict:
 
 
 
-
-
 def find_intersection_date(ticker1, ticker2):
     return max(ticker1.index[0], ticker2.index[0])
 
@@ -197,8 +196,6 @@ def correlation_batch_top_k(batch_correlation: dict, k: int = 3) -> json:
             reverse=True
         )[:k]
     })
-
-
 
 
 
@@ -661,6 +658,47 @@ def group_analysis_country_app(stocks_df: pd.DataFrame):
 
     group_analysis_region_app(stocks_df)
 
+def correlation_app(stocks_df: pd.DataFrame):
+    s = time.time()
+    st.header('Correlation: Sector')
+    st.markdown(
+        """
+        Find most correlated tickers in specific industries.
+
+        > Each part takes a little time since there are several tickers in each industry.
+        **Thanks for your patience.**
+        """
+    )
+
+    sector_choice = st.selectbox(
+        'Choose your desired sector',
+        sorted(stocks_df['sector'].unique())
+    )
+    sector_df = stocks_df[stocks_df['sector'] == sector_choice]
+
+    col1, col2 = st.columns(2)
+    with col1:
+        industry_choice = st.radio(
+            'Choose your desired industry:',
+            sector_df['industry'].unique()
+        )
+    with col2:
+        top_threshold = st.radio(
+            'Choose representation',
+            ['Pick top k', 'Pick threshold']
+        )
+
+    industry_df = sector_df[sector_df['industry'] == industry_choice]
+    industry_historical_data = read_historical(list(industry_df['ticker']))
+    industry_correlation_dict = correlation_batch_finder(industry_historical_data)
+    if top_threshold == 'Pick top k':
+        k = st.slider('Pick top k correlated tickers: ', 1, 20, 3)
+        st.json(correlation_batch_top_k(industry_correlation_dict, k))
+    elif top_threshold == 'Pick threshold':
+        threshold = st.slider('Pick threshold for correlation: ', 0.0, 1.0, 0.97)
+        st.json(correlation_batch_threshold(industry_correlation_dict, threshold))
+
+    print(f'Time is: {time.time() - s}')
 
 
 
@@ -712,6 +750,8 @@ def whole_st_app():
         group_analysis_industry_app(stocks_df)
     elif menu_choice == 'Group Analysis: Country':
         group_analysis_country_app(stocks_df)
+    elif menu_choice == 'Correlation':
+        correlation_app(stocks_df)
 
 if __name__ == '__main__':
     whole_st_app()
