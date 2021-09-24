@@ -69,6 +69,43 @@ def etf_data(data: pd.DataFrame) -> pd.DataFrame:
     df.dropna(subset=['price'], inplace=True)
     return df
 
+def region_data(stocks_df: pd.DataFrame) -> pd.DataFrame:
+
+    def findRegion(row):
+        Regions = {
+            'America': [
+                'Uruguay', 'Peru', 'Panama',
+                'Mexico', 'Costa Rica', 'Colombia',
+                'Chile', 'Brazil', 'Bahamas', 'Argentina'
+            ],
+            'Europe': [
+                'Belgium', 'Bermuda', 'Cayman Islands', 'Cyprus',
+                'Denmark', 'Finland', 'France', 'Germany', 'Greece',
+                'Ireland', 'Italy', 'Luxembourg', 'Malta', 'Monaco',
+                'Netherlands', 'Norway', 'Russia', 'Spain', 'Sweden',
+                'Switzerland', 'Turkey', 'United Kingdom'
+            ],
+            'Asia': [
+                'Taiwan', 'South Korea', 'Singapore',
+                'Philippines', 'Kazakhstan', 'Japan',
+                'Indonesia', 'India', 'Hong Kong',
+                'Israel', 'United Arab Emirates'
+            ],
+            'Other': [
+                'Australia', 'New Zealand', 'South Africa'
+            ],
+            'USA': ['USA'],
+            'Canada': ['Canada'],
+            'China': ['China'],
+        }
+        for region in Regions:
+            if row['country'] in Regions[region]:
+                return region
+
+    df = stocks_df.copy(deep=True)
+    df['region'] = df.apply(findRegion, axis='columns')
+    return df
+
 
 def general_app(df: pd.DataFrame):
     st.header('General')
@@ -458,6 +495,77 @@ def group_analysis_industry_app(stocks_df: pd.DataFrame):
             rotation=90
         )
         st.pyplot(fig)
+
+def group_analysis_region_app(stocks_df: pd.DataFrame):
+    region_df = region_data(stocks_df)
+    region_group = region_df.groupby('region')
+    st.subheader("Group Analysis: Region")
+    st.caption(
+        "> Since the major countries in the market are USA, Canada, and China,"
+        " we separate these countries from other regions."
+    )
+
+    with st.expander('Number of Companies'):
+        st.subheader('Number of Companies')
+        st.bar_chart(region_group.ticker.count())
+        st.dataframe(region_group.ticker.count())
+
+    with st.expander('Volume'):
+        st.subheader('Volume')
+        st.bar_chart(region_group.volume.sum())
+        st.dataframe(region_group.volume.sum())
+
+    with st.expander('Market Cap'):
+        st.subheader('Market Cap')
+        st.bar_chart(region_group.market_cap.sum())
+        st.dataframe(region_group.market_cap.sum())
+
+    with st.expander('-- Conclusion --'):
+        st.markdown(
+            """
+            Major things to consider from these plots are:
+            - Still ***USA*** dominate the market.
+            - Even tough ***Canadian***
+            companies traded with high volume, their market cap is not much.
+            - ***Europe*** and ***China***
+            act similar to each other but Europe has a stronger impact
+            both in volume and market cap.
+            """
+        )
+
+def group_analysis_country_app(stocks_df: pd.DataFrame):
+    st.header("Group Analysis: Country")
+    country_group = stocks_df.groupby('country')
+
+    with st.expander('Number of Companies'):
+        st.subheader('Number of Companies')
+        st.bar_chart(country_group.ticker.count())
+        st.dataframe(country_group.ticker.count())
+
+    with st.expander('Volume'):
+        st.subheader('Volume')
+        st.bar_chart(country_group.volume.sum())
+        st.dataframe(country_group.volume.sum())
+
+    with st.expander('Market Cap'):
+        st.subheader('Market Cap')
+        st.bar_chart(country_group.market_cap.sum())
+        st.dataframe(country_group.market_cap.sum())
+
+    with st.expander('-- Conclusion --'):
+        st.markdown(
+            """
+            It's obvious that USA dominate the market. The leading countries are: USA, Canada, China
+
+            To get a better intuition,
+            It's recommended to look at the data by region.
+            To do so, we're going to add a column Region.
+            """
+        )
+    st.markdown("---")
+
+    group_analysis_region_app(stocks_df)
+
 
 
 
