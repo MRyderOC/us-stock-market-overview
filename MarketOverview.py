@@ -107,6 +107,88 @@ def region_data(stocks_df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+
+
+
+def find_intersection_date(ticker1, ticker2):
+    return max(ticker1.index[0], ticker2.index[0])
+
+def correlation_finder(
+    ticker1: pd.DataFrame,
+    ticker2: pd.DataFrame,
+    column: str = 'Close'
+) -> float:
+    '''
+    Finding correlation of two tickers on a specific column.
+
+    column acceptable values: Close, Open, High, Low
+    '''
+    if column not in ['Close', 'Open', 'Low', 'High']:
+        raise ValueError('Column value invalid')
+    try:
+        time = find_intersection_date(ticker1, ticker2)
+        return ticker1.loc[time:][column].corr(ticker2.loc[time:][column])
+    except Exception:
+        return ticker1[column].corr(ticker2[column])
+
+def correlation_batch_finder(historical_data: dict) -> dict:
+    """
+    Pairwise correlation on group of tickers.
+
+    Parameters
+    ----------
+    historical_data: dict
+        A dictionary that keys are ticker names as str and values are DataFrame
+    """
+    # for ticker in historical_data.values():
+    #     if not isinstance(ticker, pd.core.frame.DataFrame):
+    #         raise TypeError('Inputs are not pandas DataFrame')
+
+    return {
+        ticker1 + ', ' + ticker2: correlation_finder(
+            historical_data[ticker1],
+            historical_data[ticker2]
+        )
+        for ticker1, ticker2 in combinations(historical_data, 2)
+    }
+
+def correlation_batch_threshold(batch_correlation: dict, threshold: float) -> json:
+    '''Finding pairs which is exceeds threshold.'''
+    return json.dumps({
+        k: v
+        for k, v in batch_correlation.items()
+        if v >= threshold
+    })
+
+def correlation_batch_top_k(batch_correlation: dict, k: int = 3) -> json:
+    """
+    Find top k correlations in the batch_correlation dictionary
+    that has the structure: (ticker1, ticker2): correlation.
+
+    Parameters
+    ----------
+    batch_correlation: dict
+        A dictionary with structure keys as tuple and values as float.
+    k: int; default = 3
+        Specify how many top elements should return.
+    """
+    if not batch_correlation:
+        raise ValueError('batch_correlation can not be empty.')
+    if k <= 0:
+        raise ValueError('k can not accept negative values.')
+    return json.dumps({
+        item[0]: item[1]
+        for item in sorted(
+            batch_correlation.items(),
+            key=lambda item: abs(item[1]),
+            reverse=True
+        )[:k]
+    })
+
+
+
+
+
 def general_app(df: pd.DataFrame):
     st.header('General')
     st.subheader('Main DataFrame')
