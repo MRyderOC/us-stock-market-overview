@@ -68,6 +68,108 @@ def etf_data(data: pd.DataFrame) -> pd.DataFrame:
 
 
 
+
+def general_app(df: pd.DataFrame):
+    st.header('General')
+    st.subheader('Main DataFrame')
+    st.dataframe(df)
+    st.markdown(f"""
+        - Market Cap missing {
+            df.isnull().sum().market_cap
+        } rows
+            - {
+                df[df.market_cap.isnull()].sector.value_counts().Financial
+            } of missing data belong to Financial Sector
+                - {
+                    df[df.market_cap.isnull()].industry.value_counts()['Exchange Traded Fund']
+                } of missing data belong to ETFs in Financial Sector
+                - {
+                    df[df.market_cap.isnull()].industry.value_counts()['Shell Companies']
+                } of missing data belong to Shell Companies in Financial Sector (Almost {
+                    round(
+                        100
+                        * df[df.market_cap.isnull()].industry.value_counts()['Shell Companies']
+                        / len(df[df['industry'] == 'Shell Companies']),
+                        -1
+                    )
+                }% of Shell Companies)
+                - {
+                    df[df.market_cap.isnull()].sector.value_counts().Financial
+                    - df[df.market_cap.isnull()].industry.value_counts()['Exchange Traded Fund']
+                    - df[df.market_cap.isnull()].industry.value_counts()['Shell Companies']
+                } of missing data belong to other Industries in Financial Sector
+            - {
+                df.isnull().sum().market_cap
+                - df[df.market_cap.isnull()].sector.value_counts().Financial
+            } of missing data belong to other Sectors
+
+        > The most missing data from Market Cap column belongs to ETFs.
+
+        Since ETFs are real important part,
+        we can separate our analysis into 2 different parts: Non ETFs(Stocks) & ETFs
+    """)
+
+def stocks_app(stocks_df: pd.DataFrame):
+    st.header('Stocks')
+    st.dataframe(stocks_df)
+
+    st.subheader("Intuition")
+    st.caption(
+        "We need to look at the data and it's descriptive measurements"
+        " to have some insight with the data we're dealing with."
+    )
+    st.table(stocks_df.describe())
+
+    st.subheader("Let's take a look at correlation matrix:")
+    cor = stocks_df.corr()
+    fig, ax = plt.subplots()
+    ax = sns.heatmap(cor, xticklabels=cor.columns, yticklabels=cor.columns, annot=True)
+    st.pyplot(fig)
+    correlation_set = set(
+        tuple(sorted([col, cor.columns[ind]]))
+        for col in cor.columns
+        for ind in np.where((cor[col] >= 0.1) & (cor[col] != 1))[0]
+    )
+    st.caption(
+        "> It seems there is a little correlation between:\n"
+        + '\n'.join([
+            '- **' + col1 + '**' + ', ' + '**' + col2 + '**'
+            for col1, col2 in correlation_set
+        ])
+    )
+
+def etf_app(etf_df: pd.DataFrame):
+    st.header('ETF (Exchange Traded Fund)')
+    st.dataframe(etf_df)
+
+    st.subheader("Intuition")
+    st.caption(
+        "We need to look at the data and it's descriptive measurements"
+        " to have some insight with the data we're dealing with."
+    )
+    st.table(etf_df.describe())
+
+    st.subheader("Let's take a look at correlation matrix:")
+    cor_etf = etf_df.corr()
+    fig, ax = plt.subplots()
+    ax = sns.heatmap(cor_etf, xticklabels=cor_etf.columns, yticklabels=cor_etf.columns, annot=True)
+    st.pyplot(fig)
+    correlation_set_etf = set(
+        tuple(sorted([col, cor_etf.columns[ind]]))
+        for col in cor_etf.columns
+        for ind in np.where((cor_etf[col] >= 0.1) & (cor_etf[col] != 1))[0]
+    )
+    st.caption(
+        "> It seems there is a little correlation between:\n"
+        + '\n'.join([
+            '- **' + col1 + '**' + ', ' + '**' + col2 + '**'
+            for col1, col2 in correlation_set_etf
+        ])
+    )
+
+
+
+
 def whole_st_app():
     """Gather the whole app together."""
     path = '2021-09-11T11:49:29.csv'
@@ -100,6 +202,12 @@ def whole_st_app():
     ]
     menu_choice = st.sidebar.selectbox('Menu', menu)
 
+    if menu_choice == 'General':
+        general_app(clean_df)
+    elif menu_choice == 'Stocks':
+        stocks_app(stocks_df)
+    elif menu_choice == 'ETFs':
+        etf_app(etf_df)
 
 
 
