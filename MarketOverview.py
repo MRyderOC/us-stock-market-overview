@@ -167,6 +167,69 @@ def etf_app(etf_df: pd.DataFrame):
         ])
     )
 
+def top_movers_stocks_app(stocks_df: pd.DataFrame):
+    st.header("Top movers")
+
+    st.subheader("Most traded stocks")
+    df = stocks_df.reset_index()
+    zs_vol = zscore(stocks_df.volume)
+    volume_outliers = np.where(abs(zs_vol) > 3)[0]
+    st.dataframe(
+        df.loc[volume_outliers].sort_values(
+            by=['volume'],
+            ascending=False
+        )
+    )
+
+    st.subheader("Most percentage change")
+    zs_change = zscore(stocks_df.change)
+    change_outliers = np.where(abs(zs_change) > 4)[0]
+    st.dataframe(
+        df.loc[change_outliers].sort_values(
+            by=['change'],
+            key=lambda col: abs(col),
+            ascending=False
+        )
+    )
+
+    st.subheader("Most traded and most changed")
+    both_outliers = sorted(list(set(volume_outliers).intersection(change_outliers)))
+    st.dataframe(df.loc[both_outliers].sort_values(by=['change'], ascending=False))
+
+def top_movers_etf_app(etf_df: pd.DataFrame):
+    st.header("Top movers")
+
+    st.subheader("Most traded ETFs")
+    # df = etf_df.reset_index()
+    zs_vol = zscore(etf_df.volume)
+    volume_outliers = np.where(abs(zs_vol) > 3)[0]
+    st.dataframe(
+        etf_df.loc[etf_df.index.intersection(volume_outliers)].sort_values(
+            by=['volume'],
+            ascending=False
+        )
+    )
+
+    st.subheader("Most percentage change")
+    zs_change = zscore(etf_df.change)
+    change_outliers = np.where(abs(zs_change) > 4)[0]
+    st.dataframe(
+        etf_df.loc[etf_df.index.intersection(change_outliers)].sort_values(
+            by=['change'],
+            key=lambda col: abs(col),
+            ascending=False
+        )
+    )
+
+    st.subheader("Most traded and most changed")
+    both_outliers = sorted(list(set(volume_outliers).intersection(change_outliers)))
+    st.dataframe(
+        etf_df.loc[etf_df.index.intersection(both_outliers)].sort_values(
+            by=['change'],
+            ascending=False
+        )
+    )
+
 
 
 
@@ -208,6 +271,10 @@ def whole_st_app():
         stocks_app(stocks_df)
     elif menu_choice == 'ETFs':
         etf_app(etf_df)
+    elif menu_choice == 'Top Movers: Stocks':
+        top_movers_stocks_app(stocks_df)
+    elif menu_choice == 'Top Movers: ETFs':
+        top_movers_etf_app(etf_df)
 
 
 
