@@ -109,6 +109,16 @@ def region_data(stocks_df: pd.DataFrame) -> pd.DataFrame:
     df['region'] = df.apply(findRegion, axis='columns')
     return df
 
+@st.cache
+def read_historical(ticker_list: list) -> dict:
+    historical_data = {}
+    for ticker in ticker_list:
+        try:
+            historical_data[ticker] = pd.read_csv(f'./db_creator/db/stocks_data/{ticker}.csv')
+        except Exception as e:
+            print(f'Ticker {ticker} missed because: {e}')
+    return historical_data
+
 
 
 
