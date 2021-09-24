@@ -115,7 +115,7 @@ def read_historical(ticker_list: list) -> dict:
     historical_data = {}
     for ticker in ticker_list:
         try:
-            historical_data[ticker] = pd.read_csv(f'./db_creator/db/stocks_data/{ticker}.csv')
+            historical_data[ticker] = pd.read_csv(f'./db/stocks_data/{ticker}.csv')
         except Exception as e:
             print(f'Ticker {ticker} missed because: {e}')
     return historical_data
@@ -156,20 +156,28 @@ def correlation_batch_finder(historical_data: dict) -> dict:
     #     if not isinstance(ticker, pd.core.frame.DataFrame):
     #         raise TypeError('Inputs are not pandas DataFrame')
 
-    return {
-        ticker1 + ', ' + ticker2: correlation_finder(
+    out = {}
+    for ticker1, ticker2 in combinations(historical_data, 2):
+        c = correlation_finder(
             historical_data[ticker1],
             historical_data[ticker2]
         )
-        for ticker1, ticker2 in combinations(historical_data, 2)
-    }
+        if np.isnan(c):
+            continue
+        else:
+            out[ticker1 + ', ' + ticker2] = c
+    return out
 
 def correlation_batch_threshold(batch_correlation: dict, threshold: float) -> json:
     '''Finding pairs which is exceeds threshold.'''
     return json.dumps({
-        k: v
-        for k, v in batch_correlation.items()
-        if v >= threshold
+        key: value
+        for key, value in sorted(
+            batch_correlation.items(),
+            key=lambda item: abs(item[1]),
+            reverse=True
+        )
+        if value >= threshold
     })
 
 def correlation_batch_top_k(batch_correlation: dict, k: int = 3) -> json:
@@ -189,8 +197,8 @@ def correlation_batch_top_k(batch_correlation: dict, k: int = 3) -> json:
     if k <= 0:
         raise ValueError('k can not accept negative values.')
     return json.dumps({
-        item[0]: item[1]
-        for item in sorted(
+        key: value
+        for key, value in sorted(
             batch_correlation.items(),
             key=lambda item: abs(item[1]),
             reverse=True
