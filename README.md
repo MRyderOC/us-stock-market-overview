@@ -27,4 +27,4 @@ This is a EDA (Exploratory Data Analysis) data science project that describes th
 * Thanks to [Mike](https://github.com/mtodisco10) who helped me with this project.
 
 ## Online view
-You can find the app on streamlite cloud as well [here](https://share.streamlit.io/mryderoc/us-stock-market-overview/main/MarketOverview.py).
+You can find this app on streamlit cloud [here](https://share.streamlit.io/mryderoc/us-stock-market-overview/main/MarketOverview.py).
