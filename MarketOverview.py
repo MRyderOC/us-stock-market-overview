@@ -1,6 +1,7 @@
 from itertools import combinations
 import json
 import time
+import datetime
 
 import numpy as np
 import pandas as pd
@@ -717,19 +718,26 @@ def correlation_app(stocks_df: pd.DataFrame):
 
 def whole_st_app():
     """Gather the whole app together."""
-    path = './db/2021-09-24_raw.csv'
-    raw_df = read_data(path)
+    yesterday = datetime.datetime.today() - datetime.timedelta(days=1)
+    try:
+        raw_df = read_data(f'./db/{str(yesterday).split()[0]}_raw.csv')
+        yesterday_flag = True
+    except FileNotFoundError:
+        raw_df = read_data('./db/2021-09-24_raw.csv')
+        yesterday_flag = False
     clean_df = clean_data(raw_df)
     stocks_df = stocks_data(clean_df)
     etf_df = etf_data(clean_df)
 
     st.title("US Stock Market Overview")
     st.markdown(
-        """
+        f"""
         This app goes through the US stock market and
         shows some of the main criteria of the market.
 
-        The data gathered from [finviz.com](https://finviz.com/screener.ashx).
+        The data gathered from [finviz.com](https://finviz.com/screener.ashx) in {
+            yesterday.strftime("%b/%d/%Y") if yesterday_flag else "Sep/24/2021"
+        }.
 
         ---
         """
