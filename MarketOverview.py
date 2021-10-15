@@ -26,34 +26,34 @@ def clean_data(data: pd.DataFrame) -> pd.DataFrame:
         df[col].replace('-', np.nan, inplace=True)
 
     # Price column: Data Cleaning
-    def priceCalc(row):
+    def price_calc(row):
         return np.nan if row['Price'] is np.nan else float(row['Price'])
-    df['Price'] = df.apply(priceCalc, axis='columns')
+    df['Price'] = df.apply(price_calc, axis='columns')
 
     # Change column: Data Cleaning
-    def changeCalc(row):
+    def change_calc(row):
         return np.nan if row['Change'] is np.nan else float(str(row['Change'])[:-1])
-    df['Change'] = df.apply(changeCalc, axis='columns')
+    df['Change'] = df.apply(change_calc, axis='columns')
 
     # Volume column: Data Cleaning
-    def volCalc(row):
+    def vol_calc(row):
         return np.nan if row['Volume'] is np.nan else int(''.join(str(row.Volume).split(',')))
-    df['Volume'] = df.apply(volCalc, axis='columns')
+    df['Volume'] = df.apply(vol_calc, axis='columns')
 
     # Market Cap: Data Cleaning
-    def capCalc(row):
+    def cap_calc(row):
         s = str(row['Market Cap']).strip()
         if s[-1] == 'M':
             return float(s[:-1])
         elif s[-1] == 'B':
             return float(s[:-1]) * 1000
     # Notify that Market Cap is based on Million $.
-    df['Market Cap'] = df.apply(capCalc, axis='columns')
+    df['Market Cap'] = df.apply(cap_calc, axis='columns')
 
     # P/E column: Data Cleaning
-    def peCalc(row):
+    def pe_calc(row):
         return float(row['P/E'])
-    df['P/E'] = df.apply(peCalc, axis='columns')
+    df['P/E'] = df.apply(pe_calc, axis='columns')
 
     # Renaming columns for ease of use
     df.rename(columns={col: '_'.join(col.split()).lower() for col in df.columns}, inplace=True)
@@ -120,7 +120,6 @@ def read_historical(ticker_list: list) -> dict:
         except Exception as e:
             print(f'Ticker {ticker} missed because: {e}')
     return historical_data
-
 
 
 def find_intersection_date(ticker1, ticker2):
@@ -205,7 +204,6 @@ def correlation_batch_top_k(batch_correlation: dict, k: int = 3) -> json:
             reverse=True
         )[:k]
     })
-
 
 
 def general_app(df: pd.DataFrame):
@@ -713,7 +711,6 @@ def correlation_app(stocks_df: pd.DataFrame):
         st.json(correlation_batch_threshold(industry_correlation_dict, threshold))
 
     print(f'Time is: {time.time() - s}')
-
 
 
 def whole_st_app():
